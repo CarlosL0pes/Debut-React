@@ -1,8 +1,7 @@
 
 import { useState } from "react";
-import {Tweet} from "./Tweet";
-
-
+import {TweetForm} from "./TweetForm";
+import {TweetList} from "./TweetList";
 const DEFAULT_TWEETS= [
     
         {
@@ -35,55 +34,44 @@ const DEFAULT_TWEETS= [
         }
 ]
 
-function App(){
-    const[ tweets, setTweets] = useState(DEFAULT_TWEETS);
-    
-    const handleSubmit = (event) => {
-        event.preventDefault();
+    const useTweets = () => {
+        const[ tweets, setTweets] = useState(DEFAULT_TWEETS);
+
+        const addTweet = (tweet) => {  
+            setTweets((curr) => {
+                const newTweet = {
+                    id: curr[curr.length - 1]?.id + 1 || 0,
+                    name:tweet.name,
+                    content:tweet.content,
+                    description:tweet.description,
+                    like:0,
+                };
+             return   [...tweets,newTweet]
+            });
         
-        const name= event.target.name.value;
-        const content= event.target.content.value;
-        const description= event.target.description.value;
+        };
+        const onDelete = (tweetId) => {
+            setTweets((curr)=> curr.filter((tweet) => tweet.id !== tweetId ));
+        };
+    
+        const onLike = (tweetId) => {
+            setTweets(curr => {
+                const copyTweet = [...curr]
+                const likedTweet = copyTweet.find((tweet) => tweet.id === tweetId);
+                likedTweet.like += 1;
+                return copyTweet;
+            })
+        };
+        return { onLike, onDelete, addTweet, tweets} 
+    }
 
-        const newTweet = {
-            id: tweets[tweets.length-1]?.id +1 ?? 0,
-            name,
-            content,
-            description,
-            like:0,
-        }
-        setTweets([...tweets,newTweet]);
-    };
+function App(){
+   const  { onLike, onDelete, addTweet, tweets}  = useTweets();
 
-    const onDelete = (tweetId) => {
-        setTweets((curr)=> curr.filter((tweet) => tweet.id !== tweetId ));
-    };
     return (
     <div>
-            <form  onSubmit={handleSubmit} className="tweet-form">
-                <h1> New Tweet</h1>
-                <input placeholder="Name" type ="text" name="name"/>
-                <input placeholder="Content" type ="text" name="content"/>
-                <input  placeholder="Description" type ="text" name="description" />
-                <input type="submit" />
-            </form>
-        <div className="tweet-container"> 
-        {tweets.map((tweet) =>{
-        return(
-        <Tweet 
-        key= {tweet.id}
-        id={tweet.id}
-         name= {tweet.name}
-         content={tweet.content}
-         description={tweet.description}
-         like= {tweet.like}
-         onDelete = { (id) => {
-                onDelete(id);    
-         }}
-         />
-         );
-        })}
-    </div>
+            <TweetForm onSubmit={addTweet} />
+            <TweetList tweets={tweets} onDelete={onDelete} onLike={onLike} />
     </div>
         );
 }
